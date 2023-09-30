@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 # Version number
 
 import re
-VERSIONFILE = "fundus-oct-challenge/_version.py"
+VERSIONFILE = "fundus_oct_challenge/_version.py"
 verstrline = open(VERSIONFILE, "rt").read()
 VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
 mo = re.search(VSRE, verstrline, re.M)
@@ -38,5 +38,10 @@ setup(
         'Development Status :: 3 - Alpha'
     ],
     python_requires=">=3.10",
+    entry_points={
+        'console_scripts': [
+            'fundus-oct=fundus_oct_challenge:main',
+        ],
+    }
     # zip_safe=False
 )

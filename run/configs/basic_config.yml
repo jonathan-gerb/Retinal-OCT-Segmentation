@@ -1,0 +1,15 @@
+# basic example config
+
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/GOALS"
+  NUM_WORKERS: 5
+
+MODEL:
+  NAME: "deeplab"
+  PRETRAINED: true
+
+TRAIN:
+  EPOCHS: 20
+  TRAIN_BATCH_SIZE: 2
+  VAL_BATCH_SIZE : 2
+

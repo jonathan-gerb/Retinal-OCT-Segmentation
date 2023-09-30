@@ -1,0 +1,9 @@
+wandb
+torch
+torchvision
+scikit-image
+scikit-learn
+transformers
+torchmetrics
+pyparsing
+monai
