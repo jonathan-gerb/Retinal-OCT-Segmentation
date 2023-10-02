@@ -43,7 +43,7 @@ def get_transforms(mode='train'):
             self.translate = translate
 
         def __call__(self, img, mask):
-            return F.randomAffine(img, translate, fill=float(img.min())), F.randomAffine(mask, translate, fill=0)
+            return F.randomAffine(img, self.translate, fill=float(img.min())), F.randomAffine(mask, self.translate, fill=0)
 
     # Joint augmentations
     joint_transforms_train = [
