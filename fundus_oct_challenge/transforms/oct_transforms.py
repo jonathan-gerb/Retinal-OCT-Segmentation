@@ -1,3 +1,4 @@
+from fnmatch import translate
 import torchvision
 # v2 transforms are faster and in beta (but they're fine), this removes the warning for using them.
 torchvision.disable_beta_transforms_warning()
@@ -36,11 +37,18 @@ def get_transforms(mode='train'):
         def __call__(self, img, mask):
             angle = self.degrees[0] + (self.degrees[1] - self.degrees[0]) * torch.rand(1)
             return F.rotate(img, angle, fill=float(img.min())), F.rotate(mask, angle, fill=0)
+        
+    class VerticalShift(object):
+        def __init__(self, translate=(0,0.15)):
+            self.translate = translate
+
+        def __call__(self, img, mask):
+            return F.randomAffine(img, translate, fill=float(img.min())), F.randomAffine(mask, translate, fill=0)
 
     # Joint augmentations
     joint_transforms_train = [
         RandomHorizontalFlipJoint(p=0.5),
-        RandomRotationJoint(),
+        RandomRotationJoint(), VerticalShift()
         # ... Add any other joint transformations for training mode
     ]
 
