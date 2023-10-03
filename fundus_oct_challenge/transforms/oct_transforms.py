@@ -37,18 +37,25 @@ def get_transforms(mode='train'):
         def __call__(self, img, mask):
             angle = self.degrees[0] + (self.degrees[1] - self.degrees[0]) * torch.rand(1)
             return F.rotate(img, angle, fill=float(img.min())), F.rotate(mask, angle, fill=0)
-        
-    class VerticalShift(object):
-        def __init__(self, translate=(0,0.15)):
+
+    class VerticalShiftJoint(object):
+        def __init__(self, translate=(0, 60)):
             self.translate = translate
 
         def __call__(self, img, mask):
-            return F.randomAffine(img, self.translate, fill=float(img.min())), F.randomAffine(mask, self.translate, fill=0)
+            shift = self.translate[0] + (self.translate[1] - self.translate[0]) * torch.rand(1)
+            return (
+                F.affine(img, angle=0, translate=(0, -shift), scale=1., shear=0, fill=0), 
+                F.affine(mask, angle=0, translate=(0, -shift), scale=1., shear=0, fill=0)
+            )
 
+        def __str__(self):
+            return "VerticalShift"
     # Joint augmentations
     joint_transforms_train = [
         RandomHorizontalFlipJoint(p=0.5),
-        RandomRotationJoint(), VerticalShift()
+        RandomRotationJoint(), 
+        VerticalShift(),
         # ... Add any other joint transformations for training mode
     ]
 
