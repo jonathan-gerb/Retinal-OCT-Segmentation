@@ -67,11 +67,28 @@ def get_transforms(mode='train'):
 
         def __str__(self):
             return "VerticalShift"
+
+    class RandomScaleJoint(object):
+        def __init__(self, min_scale=1.0, max_scale=1.2):
+            self.min_scale = min_scale
+            self.max_scale = max_scale
+
+        def __call__(self, img, mask):
+            scale = self.min_scale + (self.max_scale - self.min_scale) * torch.rand(1)
+            return (
+                F.affine(img, angle=0, translate=(0, 0), scale=scale, shear=0), 
+                F.affine(mask, angle=0, translate=(0, 0), scale=scale, shear=0)
+            )
+        
+        def __str__(self):
+            return "RandomScale"
+
     # Joint augmentations
     joint_transforms_train = [
         RandomHorizontalFlipJoint(p=0.5),
         RandomRotationJoint(), 
         VerticalShift(),
+        RandomScale()
         # ... Add any other joint transformations for training mode
     ]
 
@@ -102,7 +119,44 @@ def get_transforms(mode='train'):
 
     return composed_transforms
 
-# Usage
-train_transforms = get_transforms(mode='train')
-val_transforms = get_transforms(mode='val')
-test_transforms = get_transforms(mode='test')
+# Code for visual testing of the transformations
+#
+# if __name__ == "__main__":
+#     from torchvision.io import read_image
+#     from pathlib import Path
+#     import numpy as np
+#     import os
+#     import matplotlib.pyplot as plt
+
+#     image_path_train = Path("data/GOALS/Train/Image")
+#     mask_path_train = Path("data/GOALS/Train/Layer_Masks")
+
+#     train_imgs = np.random.choice(list(image_path_train.iterdir()), size=1)
+#     img = read_image(str(train_imgs[0]))
+#     mask = read_image(str(mask_path_train / Path(train_imgs[0].name)))
+
+#     transformations = [
+#             RandomHorizontalFlipJoint(p=1),
+#             RandomRotationJoint(), 
+#             VerticalShiftJoint(),
+#             RandomScaleJoint()
+#         ]
+
+#     n_columns = 5
+#     n_rows = int((len(transformations) + 1) / n_columns)
+#     height = max(3, n_rows * 3)
+#     width = 15
+    
+#     plt.figure(figsize=(width, height))
+#     plt.subplot(n_rows, n_columns, 1)
+#     plt.imshow(img.permute(1, 2, 0).numpy())
+#     plt.title("Original image")
+
+#     for i, transform in enumerate(transformations):
+#         transformed_img, _ =  transform(img, mask)
+
+#         plt.subplot(n_rows, n_columns, i + 2)
+#         plt.imshow(transformed_img.permute(1, 2, 0).numpy())
+#         plt.title(str(transform))
+
+#     plt.show()
