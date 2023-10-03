@@ -6,7 +6,17 @@ import torchvision.transforms.v2 as T
 from torchvision.transforms.v2 import functional as F
 import torch
 
+
 def get_transforms(mode='train'):
+    """
+    Function to get transformation for image instance.
+
+    Usage:
+        train_transforms = get_transforms(mode='train')
+        val_transforms = get_transforms(mode='val')
+        test_transforms = get_transforms(mode='test')
+    """
+
     class ComposeJoint(object):
         def __init__(self, transforms=None):
             self.transforms = transforms or []
@@ -30,6 +40,9 @@ def get_transforms(mode='train'):
                 return F.hflip(img), F.hflip(mask)
             return img, mask
 
+        def __str__(self):
+            return "RandomHorizontalFlip"
+
     class RandomRotationJoint(object):
         def __init__(self, degrees=10):
             self.degrees = (-degrees, degrees)
@@ -37,7 +50,10 @@ def get_transforms(mode='train'):
         def __call__(self, img, mask):
             angle = self.degrees[0] + (self.degrees[1] - self.degrees[0]) * torch.rand(1)
             return F.rotate(img, angle, fill=float(img.min())), F.rotate(mask, angle, fill=0)
-
+        
+        def __str__(self):
+            return "RandomRotation"
+   
     class VerticalShiftJoint(object):
         def __init__(self, translate=(0, 60)):
             self.translate = translate
