@@ -87,8 +87,8 @@ def get_transforms(mode='train'):
     joint_transforms_train = [
         RandomHorizontalFlipJoint(p=0.5),
         RandomRotationJoint(), 
-        VerticalShift(),
-        RandomScale()
+        VerticalShiftJoint(),
+        RandomScaleJoint()
         # ... Add any other joint transformations for training mode
     ]
 
