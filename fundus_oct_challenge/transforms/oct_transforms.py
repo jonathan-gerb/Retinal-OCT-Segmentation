@@ -66,8 +66,8 @@ def get_transforms(mode='train'):
         #        upper_mask_edge = torch.nonzero(torch.tensor(mask[:, column])) == 1)[0].item()
         #        lower_mask_edge = torch.nonzero(torch.tensor(mask[:, column])) == 3).squeeze(-1)[-1]).item()
         #        if upper_mask_edge < mask_upper_limit: mask_upper_limit = upper_mask_edge
-        #        if mask_lower_limit >  mask_lower_limit: mask_lower_limit = mask_lower_limit
-        #    if mask_upper_limit > (mask.shape[1][-1] - mask_lower_limit): translate = (0,mask_upper_limit) else translate = (0,mask.shape[1][-1] - mask_lower_limit)
+        #        if lower_mask_edge >  mask_lower_limit: mask_lower_limit = lower_mask_edge
+        #    if mask_upper_limit < (mask.shape[1][-1] - mask_lower_limit): translate = (0,mask_upper_limit) else translate = (0,(mask.shape[1][-1] - mask_lower_limit))
 
             shift = self.translate[0] + (self.translate[1] - self.translate[0]) * torch.rand(1)
             return (
