@@ -59,6 +59,16 @@ def get_transforms(mode='train'):
             self.translate = translate
 
         def __call__(self, img, mask):
+         # Idea for vertical dynamic shift based on the mask: This should replace the default (0,60) translate. code is a bit long though and I need to refer to mask
+         #   mask_upper_limit =  torch.nonzero(torch.tensor(mask[:, 0]) == 1)[0].item()
+         #   mask_lower_limit = torch.nonzero(torch.tensor(mask[:, 0])) == 3).squeeze(-1)[-1]).item()
+         #   for column in range(mask.shape[1])[1:]:
+        #        upper_mask_edge = torch.nonzero(torch.tensor(mask[:, column])) == 1)[0].item()
+        #        lower_mask_edge = torch.nonzero(torch.tensor(mask[:, column])) == 3).squeeze(-1)[-1]).item()
+        #        if upper_mask_edge < mask_upper_limit: mask_upper_limit = upper_mask_edge
+        #        if mask_lower_limit >  mask_lower_limit: mask_lower_limit = mask_lower_limit
+        #    if mask_upper_limit > (mask.shape[1][-1] - mask_lower_limit): translate = (0,mask_upper_limit) else translate = (0,mask.shape[1][-1] - mask_lower_limit)
+
             shift = self.translate[0] + (self.translate[1] - self.translate[0]) * torch.rand(1)
             return (
                 F.affine(img, angle=0, translate=(0, -shift), scale=1., shear=0, fill=0), 
