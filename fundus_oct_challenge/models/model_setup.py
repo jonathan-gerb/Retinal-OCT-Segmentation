@@ -2,7 +2,7 @@ import torchvision.models as models
 import torch.nn as nn
 from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
 from .unetr import UNETR
-from monai.networks.nets import UNet
+from .basic_unet import BasicUNet
 
 class DeepLabWrapper(nn.Module):
     """This wrapper class allows us to overwrite
@@ -43,14 +43,13 @@ def get_model(cfg):
         # with the background class. This allows us to still segment at full resolution.
         model = UNETR(1, cfg.MODEL.NUM_CLASSES, img_size=(800, 1104), norm_name='batch', spatial_dims=2)
     elif cfg.MODEL.NAME == "unet":
-        model = UNet(
+        model = BasicUNet(
             spatial_dims=2,
             in_channels=1,
-            out_channels=cfg.MODEL.NUM_CLASSES,
-            channels=(4, 8, 16),
-            strides=(2, 2),
-            num_res_units=2
+            out_channels=cfg.MODEL.NUM_CLASSES
         )
+        
+
     else:
         raise ValueError(f"Model {cfg.MODEL.NAME} not recognized!")
     
