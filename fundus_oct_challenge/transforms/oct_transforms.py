@@ -22,7 +22,7 @@ class ComposeJoint(object):
                 img = transform[0](img)
             else:
                 # Joint transformations
-                print("joint")
+                # print("joint")
                 img, mask = transform(img, mask)
         return img, mask
 
