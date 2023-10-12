@@ -1,10 +1,9 @@
-from fnmatch import translate
-import torchvision
-
 # v2 transforms are faster and in beta (but they're fine), this removes the warning for using them.
-torchvision.disable_beta_transforms_warning()
-import torchvision.transforms.v2 as T
-from torchvision.transforms.v2 import functional as F
+# torchvision.disable_beta_transforms_warning()
+# import torchvision.transforms.v2 as T
+# from torchvision.transforms.v2 import functional as F
+import torchvision.transforms as T
+from torchvision.transforms import functional as F
 import torch
 
 # ---------------------------- Transform Classes ---------------------------- #
@@ -18,11 +17,9 @@ class ComposeJoint(object):
         for transform in self.transforms:
             if isinstance(transform, tuple):
                 # Apply transformations only to image
-                print(transform)
                 img = transform[0](img)
             else:
                 # Joint transformations
-                print("joint")
                 img, mask = transform(img, mask)
         return img, mask
 
@@ -49,8 +46,9 @@ class RandomRotationJoint(object):
 
     def __call__(self, img, mask):
         angle = self.degrees[0] + (self.degrees[1] - self.degrees[0]) * torch.rand(1)
-        return F.rotate(img, angle, fill=float(img.min())), F.rotate(
-            mask, angle, fill=0
+
+        return F.rotate(img, float(angle), fill=float(img.min())), F.rotate(
+            mask, float(angle), fill=0
         )
 
     def __str__(self):
