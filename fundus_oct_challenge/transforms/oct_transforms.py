@@ -19,11 +19,7 @@ class ComposeJoint(object):
                 # Apply transformations only to image
                 img = transform[0](img)
             else:
-                # Joint transformations
-<<<<<<< HEAD
-=======
-                # print("joint")
->>>>>>> 6156d3fc94639c08a1f201381e4244b424650865
+                # Joint transformationss
                 img, mask = transform(img, mask)
         return img, mask
 
