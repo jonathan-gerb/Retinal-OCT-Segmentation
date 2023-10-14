@@ -247,11 +247,18 @@ class BasicUNet(nn.Module):
 
         # classification head, 2 layers deep so that the model can reorganize the information a bit.
         self.n_classification_classes = n_classification_classes
-        n_hidden_classification = round(fea[4] / 2)
+
+        down_size = fea[4] * 31 * 48
+        n_hidden_classification_0 = round(fea[4] / 16)
+        n_hidden_classification_1 = round(n_hidden_classification_0 / 16)
+
         self.projection_layer = nn.Sequential(
-            nn.Linear(fea[4], n_hidden_classification),
+            nn.Flatten(),
+            nn.Linear(fea[4] * 31 * 48, n_hidden_classification_0),
             nn.ReLU(),
-            nn.Linear(n_hidden_classification, self.n_classification_classes),
+            nn.Linear(n_hidden_classification_0, n_hidden_classification_1),
+            nn.ReLU(),
+            nn.Linear(n_hidden_classification_1, self.n_classification_classes),
         )
 
         self.upcat_4 = UpCat(spatial_dims, fea[4], fea[3], fea[3], act, norm, bias, dropout, upsample)

@@ -2,6 +2,7 @@ import argparse
 import os
 import pytorch_lightning as pl
 import wandb
+import torch
 
 # replace with your own username to get your own version
 # we can also create a shared project
@@ -15,6 +16,7 @@ from .config.defaults import get_cfg_defaults
 from .lightning_modules.pl_module import FundusOCTLightningModule
 from .datasets.fundus_oct_dataset import FundusOctDataset
 from .datasets.fundus_oct_cur_dataset import FundusOctCurDataset, TaskAwareSampler
+from .datasets.basic_dataset import get_dataset
 from .transforms.oct_transforms import get_transforms
 from .models.model_setup import get_model
 from torch.utils.data import DataLoader
@@ -50,18 +52,19 @@ def main():
         transforms_train = get_transforms(mode='train')
         transforms_val = get_transforms(mode='val')
 
-        if cfg.TRAIN.TASK == "segmentation" or cfg.TRAIN.TASK == "reconstruction":
-            train_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK)
-            val_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK)
+        if cfg.TRAIN.TASK == "segmentation" or cfg.TRAIN.TASK == "reconstruction" or cfg.TRAIN.TASK == "classification":
+            # train_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK)
+            # val_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK)
+            train_dataset = get_dataset(cfg.DATA.NAME, cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK)
+            val_dataset = get_dataset(cfg.DATA.NAME, cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK)
+
             train_dataloader = DataLoader(train_dataset, batch_size=cfg.TRAIN.TRAIN_BATCH_SIZE, shuffle=True, num_workers=cfg.DATA.NUM_WORKERS)
             val_dataloader = DataLoader(val_dataset, batch_size=cfg.TRAIN.VAL_BATCH_SIZE, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS)
-
         elif cfg.TRAIN.TASK == "curriculum":
             train_dataset = FundusOctCurDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, tasks=["segmentation","reconstruction"], batch_size=cfg.TRAIN.TRAIN_BATCH_SIZE)
             val_dataset = FundusOctCurDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, tasks=["segmentation","reconstruction"], batch_size=cfg.TRAIN.VAL_BATCH_SIZE)
             train_sampler = TaskAwareSampler(train_dataset, batch_size=cfg.TRAIN.TRAIN_BATCH_SIZE)
             val_sampler = TaskAwareSampler(val_dataset, batch_size=cfg.TRAIN.VAL_BATCH_SIZE)
-            
             # shuffle is ignored with a custom sampler
             train_dataloader = DataLoader(train_dataset, num_workers=cfg.DATA.NUM_WORKERS, batch_sampler=train_sampler)
             val_dataloader = DataLoader(val_dataset, num_workers=cfg.DATA.NUM_WORKERS, batch_sampler=val_sampler)

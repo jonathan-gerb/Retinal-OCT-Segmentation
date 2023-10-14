@@ -8,6 +8,7 @@ _C = CN()
 _C.DATA = CN()
 _C.DATA.BASEPATH = "./data"
 _C.DATA.NUM_WORKERS = 4
+_C.DATA.NAME = "fundus"
 # ... Add more default data configurations as required
 
 # Model configurations

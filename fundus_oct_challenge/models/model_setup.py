@@ -46,7 +46,9 @@ def get_model(cfg):
         model = BasicUNet(
             spatial_dims=2,
             in_channels=1,
-            out_channels=cfg.MODEL.NUM_CLASSES
+            out_channels=cfg.MODEL.NUM_CLASSES,
+            task=cfg.TRAIN.TASK,
+            n_classification_classes=cfg.MODEL.NUM_CLASSES_CLASSIFICATION
         )
         
 

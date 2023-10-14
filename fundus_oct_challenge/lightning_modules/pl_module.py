@@ -20,7 +20,7 @@ class FundusOCTLightningModule(pl.LightningModule):
         self.class_weights = torch.tensor([0, 0.4, 0.3, 0.3, 0, 0])
         self.dice_metric = DiceCoefficient(num_classes=cfg.MODEL.NUM_CLASSES, class_weights=self.class_weights)
         self.unweighted_dice_metric = DiceCoefficient(num_classes=cfg.MODEL.NUM_CLASSES)
-        self.accuracy_metric = MulticlassAccuracy(num_classes=cfg.MODEL.NUM_CLASSES)
+        self.accuracy_metric = MulticlassAccuracy(num_classes=cfg.MODEL.NUM_CLASSES_CLASSIFICATION)
         self.med_metric = MeanEuclideanDistanceEdgeError()
         self.log_freq = cfg.TRAIN.LOG_FREQ
 
@@ -79,7 +79,8 @@ class FundusOCTLightningModule(pl.LightningModule):
         task = tasks[0]
 
         # collapse target dimensions
-        targets = targets.squeeze(dim=1)
+        if len(targets.shape) > 1:
+            targets = targets.squeeze(dim=1)
 
         # forward pass of model
         outputs = self(inputs)
@@ -113,10 +114,10 @@ class FundusOCTLightningModule(pl.LightningModule):
             self.log('val_accuracy', accuracy, prog_bar=True, batch_size=self.cfg.TRAIN.VAL_BATCH_SIZE)
 
         elif task == "classification":
-            loss = F.cross_entropy(outputs, targets)
+            loss = F.cross_entropy(outputs, targets.long())
             self.log('val_loss_classification', loss, prog_bar=True, batch_size=self.cfg.TRAIN.VAL_BATCH_SIZE)
 
-            accuracy = self.accuracy_metric(outputs, targets)
+            accuracy = self.accuracy_metric(F.softmax(outputs, dim=-1), targets.long())
             self.log('val_accuracy_classification', accuracy, prog_bar=True, batch_size=self.cfg.TRAIN.VAL_BATCH_SIZE)
 
         
