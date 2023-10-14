@@ -1,14 +1,20 @@
 import os
 import torch
-from torch.utils.data import Dataset
+import random
+import numpy as np
+from torch.utils.data import Dataset, Sampler
 from torchvision.io import read_image, ImageReadMode
+from fundus_oct_challenge.utils.model_utils import normalize
 
-class FundusOctDataset(Dataset):
-    def __init__(self, root_dir='GOALS', mode='train', transforms=None, task="segmentation"):
+class FundusOctCurDataset(Dataset):
+    def __init__(self, root_dir='GOALS', mode='train', transforms=None, tasks=["segmentation","reconstruction"], task_frequency=[0.5, 0.5], batch_size=None):
         assert mode in ['train', 'val', 'test'], "Mode should be 'train', 'val', or 'test'"
         self.root_dir = root_dir
         self.mode = mode
-        self.task = task
+        self.tasks = tasks
+        self.task_frequency = normalize(task_frequency)
+        self.task2idx = {task: idx for task, idx in zip(tasks, np.arange(len(tasks)))}
+        assert len(tasks) == len(task_frequency), "number of tasks should be equal to number of task weights"
         self.transforms = transforms
         self.mapping_dict = {
             0: 1,
@@ -16,6 +22,12 @@ class FundusOctDataset(Dataset):
             160: 3,
             255: 0,
         }
+        if batch_size is None:
+            print("please set batch size when using the FundusOctCurDataset dataset!")
+            import sys
+            sys.exit(0)
+
+        self.batch_size = batch_size
         
         self.target_image_size = (800, 1100)
         self.label2id = {
@@ -46,11 +58,27 @@ class FundusOctDataset(Dataset):
             raise NotImplementedError(f"No mode: {mode} implemented")
         
         self.image_list = os.listdir(self.image_dir)
+        self.reset_index_to_task()
+
+
+    def reset_index_to_task(self):
+        # each sample gets assigned a task
+        self.ds_idx_to_task_idx = random.choices(list(self.task2idx.values()), weights=self.task_frequency, k=len(self.image_list))
+        # we save the assignment of each sample per task in a dict for easy sampling alter
+        self.task_indices = {}
+        for task in self.tasks:
+            task_idx = self.task2idx[task]
+            self.task_indices[task] = np.argwhere(self.ds_idx_to_task_idx == task_idx).squeeze()
         
     def __len__(self):
         return len(self.image_list)
 
     def __getitem__(self, idx):
+        task_idx = self.ds_idx_to_task_idx[idx]
+        task = self.tasks[task_idx]
+        # no further logic is needed for just reconstruction and segmentation
+        # for the classification task, a bit of new code is needed
+
         img_path = os.path.join(self.image_dir, self.image_list[idx])
         mask_path = os.path.join(self.mask_dir, self.image_list[idx])
 
@@ -61,7 +89,7 @@ class FundusOctDataset(Dataset):
 
         if self.transforms:
             img, mask = self.transforms(img, mask)
-        return img, mask, self.task
+        return img, mask, task
 
     def get_label_name(self, label_id):
         return list(self.label2id.keys())[label_id]
@@ -107,3 +135,26 @@ class FundusOctDataset(Dataset):
     def map_values(self, tensor):
         # Use the tensor values as indices to get the mapped values
         return torch.index_select(self.lookup_table, 0, tensor.reshape(-1)).reshape(tensor.shape)
+
+
+class TaskAwareSampler(Sampler):
+    def __init__(self, dataset, batch_size):
+        self.dataset = dataset
+        self.batch_size = batch_size
+        
+    def __iter__(self):
+        for _ in range(len(self.dataset) // self.batch_size):
+            # Randomly select a task for each batch
+            task = random.choice(self.dataset.tasks)
+            
+            # get indices that were assigned that task
+            batch_indices = list(np.random.choice(self.dataset.task_indices[task], size=self.batch_size))
+
+            # supply indices
+            yield batch_indices
+        
+        # shuffle samples at the end of the epoch
+        self.dataset.reset_index_to_task()
+
+    def __len__(self):
+        return len(self.dataset) // self.batch_size

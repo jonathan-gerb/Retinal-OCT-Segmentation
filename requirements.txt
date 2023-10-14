@@ -7,3 +7,5 @@ transformers
 torchmetrics
 pyparsing
 monai
+pytorch-lightning
+yacs
