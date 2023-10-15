@@ -51,9 +51,9 @@ class OCT2017(Dataset):
         img = read_image(img_path, mode=ImageReadMode.GRAY).float() / 255.0
         
         if self.target_image_size[0] <= img.shape[0] and self.target_image_size[1] <= img.shape[1]:
-            crop = fn.center_crop(img, output_size=self.target_image_size, antialias=False)
+            img = fn.center_crop(img, output_size=self.target_image_size, antialias=False)
         else:
-            resize = fn.resize(img, size=self.target_image_size, antialias=False)
+            img = fn.resize(img, size=self.target_image_size, antialias=False)
 
         if self.transforms:
             img, _ = self.transforms(img, img)

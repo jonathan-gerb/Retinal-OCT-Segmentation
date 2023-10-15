@@ -248,13 +248,13 @@ class BasicUNet(nn.Module):
         # classification head, 2 layers deep so that the model can reorganize the information a bit.
         self.n_classification_classes = n_classification_classes
 
-        down_size = fea[4] * 31 * 48
+        down_size = fea[4] * 50 * 68
         n_hidden_classification_0 = round(fea[4] / 16)
         n_hidden_classification_1 = round(n_hidden_classification_0 / 16)
 
         self.projection_layer = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(fea[4] * 31 * 48, n_hidden_classification_0),
+            nn.Linear(down_size, n_hidden_classification_0),
             nn.ReLU(),
             nn.Linear(n_hidden_classification_0, n_hidden_classification_1),
             nn.ReLU(),
@@ -325,6 +325,8 @@ class BasicUNet(nn.Module):
             x2 = self.down_2(x1)
             x3 = self.down_3(x2)
             x4 = self.down_4(x3)
+            # print(f'x shape: {x.shape}, x4 shape: {x4.shape}')
 
-            logits = self.projection_layer(x4)
+            logits = self.projection_layer(x4.moveaxis(1, -1))
+            # print(f'logits shape {logits.shape}')
         return logits

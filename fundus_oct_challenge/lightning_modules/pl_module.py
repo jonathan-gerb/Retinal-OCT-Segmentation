@@ -42,7 +42,8 @@ class FundusOCTLightningModule(pl.LightningModule):
         task = tasks[0]
 
         # collapse target dimensions
-        targets = targets.squeeze(dim=1)
+        if len(targets.shape) > 1:
+            targets = targets.squeeze(dim=1)
 
         # forward pass of model
         outputs = self(inputs)
