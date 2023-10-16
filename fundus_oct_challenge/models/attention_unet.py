@@ -195,9 +195,12 @@ class MAnetDecoder(nn.Module):
             skip = skips[i] if i < len(skips) else None
             if self.task == "segmentation":
                 x = decoder_block(x, skip)
-            elif self.task == "reconstruction":
-                x = decoder_block(x, torch.zeros_like(skip))
 
+            elif self.task == "reconstruction":
+                if skip is None:
+                    x = decoder_block(x, None)
+                else:
+                    x = decoder_block(x, torch.zeros_like(skip))
         return x
 
 class MAnet(SegmentationModel):
