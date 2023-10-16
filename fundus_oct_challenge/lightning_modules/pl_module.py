@@ -47,8 +47,7 @@ class FundusOCTLightningModule(pl.LightningModule):
         assert torch.max(targets) < 20, f"found class with number higher than 20, something is probably wrong. {torch.max(mask)}"
 
         task = tasks[0]
-
-        self.model.task = task
+        self.set_task(task)
 
         # collapse target dimensions
         targets = targets.squeeze(dim=1)
@@ -98,7 +97,9 @@ class FundusOCTLightningModule(pl.LightningModule):
         # but its the same for all samples in a batch so just take the first
         assert len(set(tasks)) == 1, "not all the same tasks in batch! please check the dataset and sampler class"
         task = tasks[0]
-        self.model.task = task
+        
+        # because of the wrapped 
+        self.set_task(task)
 
         # collapse target dimensions
         targets = targets.squeeze(dim=1)
@@ -167,6 +168,18 @@ class FundusOCTLightningModule(pl.LightningModule):
         To not have to update both calls, I just pass a special argument that changes the logging names.
         """
         return self.validation_step(batch, batch_idx, is_test=True)
+    
+
+    def set_task(self, task):
+        """Because of the model wrapping we need to set set the task in .model.model instead of just .model
+
+        Args:
+            task (str): task to set in the model
+        """
+        try:
+            self.model.model.task = task
+        except AttributeError:
+            self.model.task = task
     
 
     def configure_optimizers(self):
