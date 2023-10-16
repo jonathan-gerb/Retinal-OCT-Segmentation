@@ -247,6 +247,8 @@ class FundusOCTLightningModule(pl.LightningModule):
     def save_segmentations(self, dataloader, output_path, channel_first=True):
         self.eval()
         csv_filename = output_path.parent / "Classification_Results.csv"
+        
+        # set task (function because the model might be wrapped)
         self.set_task("segmentation")
 
         with open(csv_filename, 'w', newline='') as csvfile:
@@ -261,7 +263,6 @@ class FundusOCTLightningModule(pl.LightningModule):
                 img_name = Path(img_path).name
                 segmentation_output_path = output_path / img_name
 
-                # set task (function because the model might be wrapped)
 
                 # collapse target dimensions
                 targets = targets.squeeze(dim=1)

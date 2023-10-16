@@ -1,5 +1,5 @@
 # basic example config
-
+USERNAME: 'rockfor'
 DATA:
   BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/"
   NUM_WORKERS: 6
@@ -18,4 +18,4 @@ TRAIN:
   TASK : "reconstruction"
   LOG_FREQ_VAL : 250
   LOG_FREQ_TRAIN : 250
-
+  MAX_EPOCH_LENGTH : 3000

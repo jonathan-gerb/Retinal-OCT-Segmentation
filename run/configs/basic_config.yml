@@ -1,5 +1,5 @@
 # basic example config
-
+USERNAME: 'rockfor'
 DATA:
   BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
   NUM_WORKERS: 5

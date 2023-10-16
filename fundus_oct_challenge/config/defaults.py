@@ -12,6 +12,9 @@ _C.DATA.NUM_WORKERS = 4
 _C.DATA.IMG_SIZE = (800, 1104)
 # ... Add more default data configurations as required
 
+# user config
+_C.USERNAME = ""
+
 # Model configurations
 _C.MODEL = CN()
 _C.MODEL.NAME = "deeplab"  # default model

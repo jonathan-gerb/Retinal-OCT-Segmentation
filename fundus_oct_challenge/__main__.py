@@ -22,12 +22,13 @@ from torch.utils.data import DataLoader
 
 def main():
     cfg = parse_arguments()
+    assert cfg.USERNAME != "", "please specify you weights adn biases username in teh yaml config as: USERNAME: 'username'"
+    
     model = get_model(cfg)
 
     # manually move the model to gpu, pt lightning should do this but there was some error with the wrapper
     # so now we have to move it manually
     # model = model.to('cuda:0' if torch.cuda.is_available() else 'cpu')
-
 
     if cfg.MODEL.RESUME_PATH != "":
         # load model that was previously trained using the codebase. In this case any settings
@@ -47,8 +48,7 @@ def main():
     # Create a logger
     wandb_logger = WandbLogger(log_model=True, 
                                project='oct_fundus', 
-                               entity='rockfor', 
-                               dir="/mnt/mass_storage/master_ai/medical_ai_training_logs")
+                               entity=cfg.USERNAME)
     
     # add callbacks
     # model checkpointing, uploads model checkpoints to wandb
