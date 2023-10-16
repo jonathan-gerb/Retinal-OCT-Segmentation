@@ -1,4 +1,5 @@
 import torchvision.models as models
+import torch
 import torch.nn as nn
 from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
 from .unetr import UNETR
@@ -33,6 +34,29 @@ class DeepLabWrapper(nn.Module):
         except AttributeError:
             return getattr(self.model, attr)
 
+class PaddingWrapper(nn.Module):
+    def __init__(self, model, model_size=(800, 1104)):
+        super(PaddingWrapper, self).__init__()  # Important! Initialize the parent class
+        self.model_size = model_size
+        self.model = model
+        
+    def forward(self, x):
+        assert x.ndim == 4, f"wrapper input shape had unexpected ndim: {x.ndim} with shape {x.shape}"
+        b, c, h, w = x.shape
+        padded_input = torch.zeros((b, c) + self.model_size, device=x.device)
+        padded_input[:, :, :h, :w] = x
+        output = self.model(padded_input)
+
+        return output[:, :, :h, :w]
+    
+    def __getattr__(self, attr):
+        # If an attribute isn't found in this class, it will be searched in self.model
+        try:
+            return super().__getattr__(attr)
+        except AttributeError:
+            return getattr(self.model, attr)
+
+
 def get_model(cfg):
     if cfg.MODEL.NAME == 'deeplab':
         # Get a pretrained FCN with a ResNet-50 backbone
@@ -41,7 +65,16 @@ def get_model(cfg):
         # different models have different input requirements. The best way to deal with this is probably
         # to find the closest bigger size that is compatable and then pad around the original image
         # with the background class. This allows us to still segment at full resolution.
-        model = UNETR(1, cfg.MODEL.NUM_CLASSES, img_size=(800, 1104), norm_name='batch', spatial_dims=2)
+        model_image_size = (800, 1104)
+        model = UNETR(1, 
+                      cfg.MODEL.NUM_CLASSES, 
+                      img_size=model_image_size, 
+                      norm_name='batch', 
+                      hidden_size=512, # slightly smaller than the original model (768)
+                      num_heads=8, # slightly smaller than the original model (12)
+                      mlp_dim=2048,# slightly smaller than the original model (3072)
+                      spatial_dims=2)
+        model = PaddingWrapper(model, model_size=model_image_size)
     elif cfg.MODEL.NAME == "unet":
         model = BasicUNet(
             spatial_dims=2,

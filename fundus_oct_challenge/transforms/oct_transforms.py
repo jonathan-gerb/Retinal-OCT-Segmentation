@@ -79,8 +79,9 @@ class VerticalShiftJoint(object):
         ) * torch.rand(1)
         return (
             F.affine(img, angle=0, translate=(0, -shift), scale=1.0, shear=0, fill=0),
+            # fill value is set to 0 for the mask as the mask values are already transformed to class indices
             F.affine(
-                mask, angle=0, translate=(0, -shift), scale=1.0, shear=0, fill=255
+                mask, angle=0, translate=(0, -shift), scale=1.0, shear=0, fill=0
             ),
         )
 

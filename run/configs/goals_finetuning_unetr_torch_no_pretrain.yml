@@ -1,0 +1,22 @@
+# config that finetunes on goals using pretrained weights from the large combined dataset on the reconstruction task
+
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
+  NUM_WORKERS: 5
+  DATASET: "goals"
+  IMG_SIZE: [800, 1100]
+
+MODEL:
+  NAME: "unetr"
+  PRETRAINED: true
+  RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/lightning_logs/7hlysqnt/checkpoints/epoch=24-step=425.ckpt"
+  NUM_CLASSES_CLASSIFICATION: 5
+
+TRAIN:
+  EPOCHS: 500
+  TRAIN_BATCH_SIZE: 1
+  VAL_BATCH_SIZE : 1
+  TASK : "segmentation"
+  LOG_FREQ : 10
+  LOG_FREQ_IMG : 25
+  ACCUMUALTE_GRAD_BATCHES: 6

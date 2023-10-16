@@ -58,6 +58,7 @@ class FundusOctDataset(Dataset):
         mask = read_image(mask_path, mode=ImageReadMode.GRAY).squeeze().long()
 
         mask = self.preprocess_png_mask(mask).unsqueeze(dim=0)
+        assert torch.max(mask) < 20, f"found class with number higher than 20, something is probably wrong. {torch.max(mask)}"
 
         if self.transforms:
             img, mask = self.transforms(img, mask)
