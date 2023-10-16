@@ -70,8 +70,8 @@ class FundusOCTLightningModule(pl.LightningModule):
             if batch_idx % self.log_freq_img == 0:
                 outputs = outputs.mean(dim=1)
                 self.logger.experiment.log({
-                    "recon_input_val": [wandb.Image(img.float(), caption="Input Image") for img in inputs[:self.n_log_images]],
-                    "recon_output_val": [wandb.Image(img, caption="Reconstructed Image") for img in outputs[:self.n_log_images]]
+                    "recon_input_train": [wandb.Image(img.float(), caption="Input Image") for img in inputs[:self.n_log_images]],
+                    "recon_output_train": [wandb.Image(img, caption="Reconstructed Image") for img in outputs[:self.n_log_images]]
                 })
 
         elif task == "segmentation":
@@ -98,6 +98,7 @@ class FundusOCTLightningModule(pl.LightningModule):
         # but its the same for all samples in a batch so just take the first
         assert len(set(tasks)) == 1, "not all the same tasks in batch! please check the dataset and sampler class"
         task = tasks[0]
+        self.model.task = task
 
         # collapse target dimensions
         targets = targets.squeeze(dim=1)
@@ -180,7 +181,7 @@ class FundusOCTLightningModule(pl.LightningModule):
             raise NotImplementedError(f"please specify the loss to monitor for the LR scheduler, not loss chosen for task: {self.cfg.TRAIN.TASK}")
         # Define the scheduler
         scheduler = {
-            'scheduler': ReduceLROnPlateau(optimizer, factor=0.5, patience=3, verbose=True),
+            'scheduler': ReduceLROnPlateau(optimizer, factor=self.cfg.TRAIN.LR_REDUCER.FACTOR, patience=self.cfg.TRAIN.LR_REDUCER.PATIENCE, verbose=True),
             'monitor': monitor,
             'interval': 'epoch',
             'frequency': 1,

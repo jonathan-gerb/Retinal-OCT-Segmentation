@@ -24,6 +24,8 @@ _C.MODEL.NUM_CLASSES_CLASSIFICATION = 4
 # Training configurations
 _C.TRAIN = CN()
 _C.TRAIN.DO_TRAIN = True
+_C.TRAIN.MAX_EPOCH_LENGTH = -1 # for some datasets that are huge we would like to limit the size of the training dataset, -1 uses the entire dataset
+
 # can be segmentation/reconstruction/classification/curriculum
 _C.TRAIN.TASK = "segmentation" 
 _C.TRAIN.EPOCHS = 10
@@ -33,8 +35,12 @@ _C.TRAIN.LR = 0.0001
 _C.TRAIN.VAL_BATCH_SIZE = 2
 _C.TRAIN.LOG_FREQ = 25 # log every LOG_FREQ steps
 _C.TRAIN.LOG_FREQ_IMG = 25
+_C.TRAIN.SEPARATE_BOTTOM_BG = True
 _C.TRAIN.N_LOG_IMAGES = 1 # how many images from the batch to log, if higher than batch_size is set to batch_size
 # ... Add more default training configurations
+_C.TRAIN.LR_REDUCER = CN()
+_C.TRAIN.LR_REDUCER.PATIENCE = 3
+_C.TRAIN.LR_REDUCER.FACTOR = 0.5
 
 # ... Add other configurations like optimizer, evaluator, etc.
 _C.EVALUATE = CN()

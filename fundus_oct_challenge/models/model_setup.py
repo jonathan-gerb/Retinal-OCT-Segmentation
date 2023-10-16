@@ -62,6 +62,9 @@ def get_model(cfg):
         # Get a pretrained FCN with a ResNet-50 backbone
         model = DeepLabWrapper(pretrained=cfg.MODEL.PRETRAINED, num_classes=cfg.MODEL.NUM_CLASSES)
     elif cfg.MODEL.NAME == 'unetr':
+        if cfg.MODEL.PRETRAINED:
+            print("WARNING: no default pretrained weights available for model Unetr, " +
+                  "MODEL.PRETRAINED option is ignored. MODEL.RESUME_PATH can still be used.")
         # different models have different input requirements. The best way to deal with this is probably
         # to find the closest bigger size that is compatable and then pad around the original image
         # with the background class. This allows us to still segment at full resolution.

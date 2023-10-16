@@ -80,9 +80,9 @@ def main():
 
         if cfg.DATA.DATASET.lower() ==  "goals":
             if cfg.TRAIN.TASK == "segmentation" or cfg.TRAIN.TASK == "reconstruction":
-                train_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK)
-                val_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK)
-                test_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "test", transforms=transforms_test)
+                train_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK, separate_bottom_bg=cfg.TRAIN.SEPARATE_BOTTOM_BG)
+                val_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK, separate_bottom_bg=cfg.TRAIN.SEPARATE_BOTTOM_BG)
+                test_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "test", transforms=transforms_test, separate_bottom_bg=cfg.TRAIN.SEPARATE_BOTTOM_BG)
 
                 train_dataloader = DataLoader(train_dataset, batch_size=cfg.TRAIN.TRAIN_BATCH_SIZE, shuffle=True, num_workers=cfg.DATA.NUM_WORKERS)
                 val_dataloader = DataLoader(val_dataset, batch_size=cfg.TRAIN.VAL_BATCH_SIZE, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS)
@@ -106,13 +106,16 @@ def main():
         elif cfg.DATA.DATASET.lower() == "combined":
             train_dataset = CombinedOCTDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK, 
                                                datasets=["GOALS", "kermany2018", "neh_ut_2021", "2015_BOE_CHIU", "OCTID"],
-                                               img_size=cfg.DATA.IMG_SIZE)
+                                               img_size=cfg.DATA.IMG_SIZE,
+                                               max_ds_size=cfg.TRAIN.MAX_EPOCH_LENGTH)
             val_dataset = CombinedOCTDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK, 
                                              datasets=["GOALS", "kermany2018", "neh_ut_2021", "2015_BOE_CHIU", "OCTID"],
-                                             img_size=cfg.DATA.IMG_SIZE)
+                                             img_size=cfg.DATA.IMG_SIZE, 
+                                             max_ds_size=int(cfg.TRAIN.MAX_EPOCH_LENGTH / 2))
             test_dataset = CombinedOCTDataset(cfg.DATA.BASEPATH, "test", transforms=transforms_test, task=cfg.TRAIN.TASK, 
                                               datasets=["GOALS", "kermany2018", "neh_ut_2021", "2015_BOE_CHIU", "OCTID"],
-                                              img_size=cfg.DATA.IMG_SIZE)
+                                              img_size=cfg.DATA.IMG_SIZE,
+                                              max_ds_size=int(cfg.TRAIN.MAX_EPOCH_LENGTH / 2))
 
             train_dataloader = DataLoader(train_dataset, batch_size=cfg.TRAIN.TRAIN_BATCH_SIZE, shuffle=True, num_workers=cfg.DATA.NUM_WORKERS)
             val_dataloader = DataLoader(val_dataset, batch_size=cfg.TRAIN.VAL_BATCH_SIZE, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS)
