@@ -9,7 +9,6 @@ from pathlib import Path
 from PIL import Image
 import time
 import csv
-# from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 import wandb
 from torchmetrics.classification import MulticlassAccuracy
 
