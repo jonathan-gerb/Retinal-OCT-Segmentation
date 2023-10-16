@@ -4,6 +4,7 @@ import torch.nn as nn
 from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
 from .unetr import UNETR
 from .basic_unet import BasicUNet
+from .attention_unet import MAnet
 
 class DeepLabWrapper(nn.Module):
     """This wrapper class allows us to overwrite
@@ -84,6 +85,14 @@ def get_model(cfg):
             in_channels=1,
             out_channels=cfg.MODEL.NUM_CLASSES
         )
+    elif cfg.MODEL.NAME == "attunet":
+        model_image_size = (800, 1120)
+        model = MAnet(
+            encoder_name = 'resnet34',
+            in_channels = 1,
+            classes = 6
+        )
+        model = PaddingWrapper(model, model_size=model_image_size)
         
 
     else:
