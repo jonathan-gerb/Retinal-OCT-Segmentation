@@ -1,0 +1,24 @@
+# config that finetunes on goals using pretrained weights from the large combined dataset on the reconstruction task
+
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection"
+  NUM_WORKERS: 5
+  DATASET: "combined"
+  IMG_SIZE: [800, 1100]
+
+MODEL:
+  NAME: "unetr"
+  PRETRAINED: true
+  NUM_CLASSES_CLASSIFICATION: 5
+  RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/oct_fundus/9a69y2pb/checkpoints/epoch=0-step=500.ckpt"
+
+TRAIN:
+  EPOCHS: 500
+  TRAIN_BATCH_SIZE: 1
+  VAL_BATCH_SIZE : 1
+  TASK : "reconstruction"
+  LOG_FREQ_VAL : 50
+  LOG_FREQ_TRAIN : 50
+  ACCUMUALTE_GRAD_BATCHES: 6
+  MAX_EPOCH_LENGTH : 3000
+  LR : 0.0001

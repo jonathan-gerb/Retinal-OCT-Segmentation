@@ -89,7 +89,7 @@ class FundusOctCurDataset(Dataset):
 
         if self.transforms:
             img, mask = self.transforms(img, mask)
-        return img, mask, task
+        return img, mask, task, img_path
 
     def get_label_name(self, label_id):
         return list(self.label2id.keys())[label_id]

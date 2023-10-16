@@ -187,7 +187,7 @@ class BasicUNet(nn.Module):
         bias: bool = True,
         dropout: float | tuple = 0.0,
         upsample: str = "deconv",
-        task = "segmentation",
+        task: str = "segmentation",
         n_classification_classes = 4
     ):
         """

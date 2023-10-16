@@ -44,6 +44,7 @@ class UNETR(nn.Module):
         spatial_dims: int = 3,
         qkv_bias: bool = False,
         save_attn: bool = False,
+        task: str = "segmentation"
     ) -> None:
         """
         Args:
@@ -85,6 +86,7 @@ class UNETR(nn.Module):
             raise ValueError("hidden_size should be divisible by num_heads.")
 
         self.num_layers = 12
+        self.task = task
         img_size = ensure_tuple_rep(img_size, spatial_dims)
         self.patch_size = ensure_tuple_rep(16, spatial_dims)
         self.feat_size = tuple(img_d // p_d for img_d, p_d in zip(img_size, self.patch_size))
@@ -198,19 +200,39 @@ class UNETR(nn.Module):
         return x
 
     def forward(self, x_in):
-        x, hidden_states_out = self.vit(x_in)
-        enc1 = self.encoder1(x_in)
-        x2 = hidden_states_out[3]
-        enc2 = self.encoder2(self.proj_feat(x2))
-        x3 = hidden_states_out[6]
-        enc3 = self.encoder3(self.proj_feat(x3))
-        x4 = hidden_states_out[9]
-        enc4 = self.encoder4(self.proj_feat(x4))
+        if self.task == "reconstruction":
+            x, hidden_states_out = self.vit(x_in)
+            enc1 = self.encoder1(x_in)
+            x2 = hidden_states_out[3]
+            enc2 = self.encoder2(self.proj_feat(x2))
+            x3 = hidden_states_out[6]
+            enc3 = self.encoder3(self.proj_feat(x3))
+            x4 = hidden_states_out[9]
+            enc4 = self.encoder4(self.proj_feat(x4))
 
-        dec4 = self.proj_feat(x)
-        dec3 = self.decoder5(dec4, enc4)
-        dec2 = self.decoder4(dec3, enc3)
-        dec1 = self.decoder3(dec2, enc2)
-        out = self.decoder2(dec1, enc1)
-        out = self.out(out)
+            dec4 = self.proj_feat(x)
+            dec3 = self.decoder5(dec4, torch.zeros_like(enc4, device=enc4.device))
+            dec2 = self.decoder4(dec3, torch.zeros_like(enc3, device=enc3.device))
+            dec1 = self.decoder3(dec2, torch.zeros_like(enc2, device=enc2.device))
+            out = self.decoder2(dec1, torch.zeros_like(enc1, device=enc1.device))
+            out = self.out(out)
+
+        elif self.task == "segmentation":
+            x, hidden_states_out = self.vit(x_in)
+            enc1 = self.encoder1(x_in)
+            x2 = hidden_states_out[3]
+            enc2 = self.encoder2(self.proj_feat(x2))
+            x3 = hidden_states_out[6]
+            enc3 = self.encoder3(self.proj_feat(x3))
+            x4 = hidden_states_out[9]
+            enc4 = self.encoder4(self.proj_feat(x4))
+
+            dec4 = self.proj_feat(x)
+            dec3 = self.decoder5(dec4, enc4)
+            dec2 = self.decoder4(dec3, enc3)
+            dec1 = self.decoder3(dec2, enc2)
+            out = self.decoder2(dec1, enc1)
+            out = self.out(out)
+        else:
+            raise NotImplementedError(f"no forward pass implemented for task: {self.task}")
         return out

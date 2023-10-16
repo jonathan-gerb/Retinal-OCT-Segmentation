@@ -1,7 +1,7 @@
 import argparse
 import os
 import pytorch_lightning as pl
-import wandb
+from pathlib import Path
 
 # replace with your own username to get your own version
 # we can also create a shared project
@@ -65,7 +65,7 @@ def main():
     # initialize pl trainer, with all the arguments
     trainer = pl.Trainer(max_epochs=cfg.TRAIN.EPOCHS,
                          accelerator='gpu',
-                         log_every_n_steps=cfg.TRAIN.LOG_FREQ,
+                         log_every_n_steps=cfg.TRAIN.LOG_FREQ_TRAIN,
                          precision=16,
                          accumulate_grad_batches=cfg.TRAIN.ACCUMUALTE_GRAD_BATCHES,
                          devices=1,
@@ -80,9 +80,9 @@ def main():
 
         if cfg.DATA.DATASET.lower() ==  "goals":
             if cfg.TRAIN.TASK == "segmentation" or cfg.TRAIN.TASK == "reconstruction":
-                train_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK)
-                val_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK)
-                test_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "test", transforms=transforms_test)
+                train_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK, separate_bottom_bg=cfg.TRAIN.SEPARATE_BOTTOM_BG)
+                val_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK, separate_bottom_bg=cfg.TRAIN.SEPARATE_BOTTOM_BG)
+                test_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "test", transforms=transforms_test, separate_bottom_bg=cfg.TRAIN.SEPARATE_BOTTOM_BG)
 
                 train_dataloader = DataLoader(train_dataset, batch_size=cfg.TRAIN.TRAIN_BATCH_SIZE, shuffle=True, num_workers=cfg.DATA.NUM_WORKERS)
                 val_dataloader = DataLoader(val_dataset, batch_size=cfg.TRAIN.VAL_BATCH_SIZE, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS)
@@ -106,13 +106,16 @@ def main():
         elif cfg.DATA.DATASET.lower() == "combined":
             train_dataset = CombinedOCTDataset(cfg.DATA.BASEPATH, "train", transforms=transforms_train, task=cfg.TRAIN.TASK, 
                                                datasets=["GOALS", "kermany2018", "neh_ut_2021", "2015_BOE_CHIU", "OCTID"],
-                                               img_size=cfg.DATA.IMG_SIZE)
+                                               img_size=cfg.DATA.IMG_SIZE,
+                                               max_ds_size=cfg.TRAIN.MAX_EPOCH_LENGTH)
             val_dataset = CombinedOCTDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task=cfg.TRAIN.TASK, 
                                              datasets=["GOALS", "kermany2018", "neh_ut_2021", "2015_BOE_CHIU", "OCTID"],
-                                             img_size=cfg.DATA.IMG_SIZE)
+                                             img_size=cfg.DATA.IMG_SIZE, 
+                                             max_ds_size=int(cfg.TRAIN.MAX_EPOCH_LENGTH / 2))
             test_dataset = CombinedOCTDataset(cfg.DATA.BASEPATH, "test", transforms=transforms_test, task=cfg.TRAIN.TASK, 
                                               datasets=["GOALS", "kermany2018", "neh_ut_2021", "2015_BOE_CHIU", "OCTID"],
-                                              img_size=cfg.DATA.IMG_SIZE)
+                                              img_size=cfg.DATA.IMG_SIZE,
+                                              max_ds_size=int(cfg.TRAIN.MAX_EPOCH_LENGTH / 2))
 
             train_dataloader = DataLoader(train_dataset, batch_size=cfg.TRAIN.TRAIN_BATCH_SIZE, shuffle=True, num_workers=cfg.DATA.NUM_WORKERS)
             val_dataloader = DataLoader(val_dataset, batch_size=cfg.TRAIN.VAL_BATCH_SIZE, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS)
@@ -129,6 +132,16 @@ def main():
     # load the best model and do eval
     if cfg.EVALUATE.DO_EVAL:
         trainer.test(lightning_module, test_dataloader, ckpt_path='best')
+
+    if cfg.EVALUATE.GENERATE_OUTPUT_SEGMENTATIONS:
+        lightning_module = lightning_module.to("cuda:0")
+        transforms_val = get_transforms(mode='val')
+        val_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task="segmentation", separate_bottom_bg=False)
+        val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS)
+    
+        output_path = Path(cfg.DATA.BASEPATH) / "Validation" / "Layer_Segmentations"
+        os.makedirs(str(output_path), exist_ok=True)
+        lightning_module.save_segmentations(val_dataloader, output_path)
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Fundus OCT Challenge")

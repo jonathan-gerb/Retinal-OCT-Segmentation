@@ -5,19 +5,21 @@ import pandas as pd
 import numpy as np
 import re
 import cv2
+from scipy import ndimage
 from pathlib import Path
 from torch.utils.data import Dataset
 import torchvision.transforms.functional as fn
 from torchvision.io import read_image, ImageReadMode
 
 class CombinedOCTDataset(Dataset):
-    def __init__(self, root_dir='retinal_oct_dataset_collection', mode='train', transforms=None, task="reconstruction", datasets=["kermany2018"], img_size=(800, 1104)):
+    def __init__(self, root_dir='retinal_oct_dataset_collection', mode='train', transforms=None, task="reconstruction", datasets=["kermany2018"], img_size=(800, 1104), max_ds_size=-1):
         assert mode in ['train', 'val', 'test'], "Mode should be 'train', 'val', or 'test'"
         self.root_dir = root_dir
         self.mode = mode
         assert task == "reconstruction" or task == "classification", "CombinedOCTDataset only supports reconstruction or classification"
         self.task = task
         self.img_size = img_size
+        self.max_ds_size = max_ds_size
         self.datasets = datasets
         self.available_datasets = {}
         self.available_datasets['classification'] = ["GOALS", "kermany2018", "neh_ut_2021", "OCTID"]
@@ -230,28 +232,42 @@ class CombinedOCTDataset(Dataset):
         self.dataset_paths["octid"]['labels'] = labels
         assert len(image_list) == len(labels)
 
+    def replace_white_sides(self, img):
+        # replace white sides of rotated images
+        threshold = 253
+        binary_mask = (img >= threshold).astype(np.int32)
+        labeled, num_features = ndimage.label(binary_mask)
+        for i in range(1, num_features + 1):
+            blob_size = (labeled == i).sum()
+            if blob_size > 10:  # adjust as needed
+                img[labeled == i] = 0  # replacing with black for this example
+        return img
 
     def __len__(self):
         # shorten dataset artifically to get faster epochs
-        if self.mode == 'train':
-            return int(len(self.all_images) / 10)
-        else:
+        if self.max_ds_size == -1:
             return len(self.all_images)
+        else:
+            return self.max_ds_size
 
     def __getitem__(self, idx):
         img_path = self.all_images[idx]
         label = self.all_labels[idx]
         if ".tif" in img_path:
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-            img = torch.from_numpy(img).float() / 255.0
             if img.ndim == 2:
-                img = img.unsqueeze(0)
+                img = img[np.newaxis, :, :]
         else:
-            img = read_image(img_path, mode=ImageReadMode.GRAY).float() / 255.0
+            img = read_image(img_path, mode=ImageReadMode.GRAY).numpy()
 
-        if img is None:
-            # if something goes wrong just sample the item at index 0
-            print('img was none, sampling index 0 instead')
+        # replace white sides of rotated images, takes numpy input
+        img = self.replace_white_sides(img)
+
+        # Convert back to tensor and normalize
+        img = torch.from_numpy(img).float() / 255.0
+
+        if img is None or img.nelement() == 0:
+            print('img was none or empty, sampling index 0 instead')
             return self[0]
 
         img = fn.resize(img, size=self.img_size, antialias=True)
@@ -263,11 +279,10 @@ class CombinedOCTDataset(Dataset):
                 print(img_path, label, img.shape)
                 return
 
-
         if self.task == 'reconstruction':
-            return img, img, self.task
+            return img, img, self.task, img_path
         if self.task == 'classification':
-            return img, label, self.task
+            return img, label, self.task, img_path
 
     def get_label_name(self, label_id):
         return list(self.label2classidx.keys())[label_id]
