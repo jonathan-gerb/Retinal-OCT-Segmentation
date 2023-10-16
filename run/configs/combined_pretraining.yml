@@ -1,0 +1,21 @@
+# basic example config
+
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/"
+  NUM_WORKERS: 6
+  DATASET: "combined"
+  IMG_SIZE: [800, 1100]
+
+MODEL:
+  NAME: "unet"
+  PRETRAINED: true
+  NUM_CLASSES_CLASSIFICATION: 5
+
+TRAIN:
+  EPOCHS: 20
+  TRAIN_BATCH_SIZE: 6
+  VAL_BATCH_SIZE : 6
+  TASK : "reconstruction"
+  LOG_FREQ : 25
+  LOG_FREQ_IMG : 250
+

@@ -7,13 +7,16 @@ _C = CN()
 # Dataset configurations
 _C.DATA = CN()
 _C.DATA.BASEPATH = "./data"
+_C.DATA.DATASET = "GOALS"
 _C.DATA.NUM_WORKERS = 4
+_C.DATA.IMG_SIZE = (800, 1104)
 # ... Add more default data configurations as required
 
 # Model configurations
 _C.MODEL = CN()
 _C.MODEL.NAME = "deeplab"  # default model
 _C.MODEL.PRETRAINED = True
+_C.MODEL.RESUME_PATH = ""
 _C.MODEL.NUM_CLASSES = 6 # for segmentation
 _C.MODEL.NUM_CLASSES_CLASSIFICATION = 4
 # ... Add more default model configurations
@@ -25,9 +28,11 @@ _C.TRAIN.DO_TRAIN = True
 _C.TRAIN.TASK = "segmentation" 
 _C.TRAIN.EPOCHS = 10
 _C.TRAIN.TRAIN_BATCH_SIZE = 2
+_C.TRAIN.ACCUMUALTE_GRAD_BATCHES = 1
 _C.TRAIN.LR = 0.0001
 _C.TRAIN.VAL_BATCH_SIZE = 2
 _C.TRAIN.LOG_FREQ = 25 # log every LOG_FREQ steps
+_C.TRAIN.LOG_FREQ_IMG = 25
 _C.TRAIN.N_LOG_IMAGES = 1 # how many images from the batch to log, if higher than batch_size is set to batch_size
 # ... Add more default training configurations
 

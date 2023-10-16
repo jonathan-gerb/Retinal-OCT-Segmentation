@@ -291,12 +291,17 @@ class BasicUNet(nn.Module):
             x3 = self.down_3(x2)
             x4 = self.down_4(x3)
 
-            u4 = self.recon_upcat_4(x4, torch.zeros_like(x3))
-            u3 = self.recon_upcat_3(u4, torch.zeros_like(x2))
-            u2 = self.recon_upcat_2(u3, torch.zeros_like(x1))
-            u1 = self.recon_upcat_1(u2, torch.zeros_like(x0))
+            # u4 = self.recon_upcat_4(x4, torch.zeros_like(x3))
+            # u3 = self.recon_upcat_3(u4, torch.zeros_like(x2))
+            # u2 = self.recon_upcat_2(u3, torch.zeros_like(x1))
+            # u1 = self.recon_upcat_1(u2, torch.zeros_like(x0))
+            # when doing pretraining we want to actually train the same decoder instead of a seperate head
+            u4 = self.upcat_4(x4, torch.zeros_like(x3))
+            u3 = self.upcat_3(u4, torch.zeros_like(x2))
+            u2 = self.upcat_2(u3, torch.zeros_like(x1))
+            u1 = self.upcat_1(u2, torch.zeros_like(x0))
 
-            logits = self.recon_final_conv(u1)
+            logits = self.final_conv(u1)
 
         elif self.task == "segmentation":
             x0 = self.conv_0(x)

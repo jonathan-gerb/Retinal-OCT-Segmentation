@@ -198,22 +198,6 @@ class UNETR(nn.Module):
         return x
 
     def forward(self, x_in):
-        # the reshaping done by this model results in it not being able to correctly reconstruct
-        # the shape of 800 by 1100. I just pad to the nearest multiple of 8 and cut off the excess
-        # at the end
-        # new bit
-        orig_shape = x_in.shape
-        device = x_in.device
-        padded_in = torch.zeros(orig_shape[0],
-                             orig_shape[1],
-                             orig_shape[2],
-                             orig_shape[3]+ 4,
-                             dtype=torch.float,
-                             device=device)
-
-        padded_in[:,:,:,:1100] = x_in
-        del x_in
-        x_in = padded_in
         x, hidden_states_out = self.vit(x_in)
         enc1 = self.encoder1(x_in)
         x2 = hidden_states_out[3]
@@ -222,13 +206,11 @@ class UNETR(nn.Module):
         enc3 = self.encoder3(self.proj_feat(x3))
         x4 = hidden_states_out[9]
         enc4 = self.encoder4(self.proj_feat(x4))
+
         dec4 = self.proj_feat(x)
         dec3 = self.decoder5(dec4, enc4)
         dec2 = self.decoder4(dec3, enc3)
         dec1 = self.decoder3(dec2, enc2)
-
         out = self.decoder2(dec1, enc1)
         out = self.out(out)
-
-        # final cutting off
-        return out[:,:,:,:1100]
+        return out

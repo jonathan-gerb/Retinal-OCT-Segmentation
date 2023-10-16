@@ -1,7 +1,7 @@
 # basic example config
 
 DATA:
-  BASEPATH: "/mnt/mass_storage/master_ai/GOALS"
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
   NUM_WORKERS: 5
 
 MODEL:
