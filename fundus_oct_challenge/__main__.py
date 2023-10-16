@@ -1,7 +1,7 @@
 import argparse
 import os
 import pytorch_lightning as pl
-import wandb
+from pathlib import Path
 
 # replace with your own username to get your own version
 # we can also create a shared project
@@ -65,7 +65,7 @@ def main():
     # initialize pl trainer, with all the arguments
     trainer = pl.Trainer(max_epochs=cfg.TRAIN.EPOCHS,
                          accelerator='gpu',
-                         log_every_n_steps=cfg.TRAIN.LOG_FREQ,
+                         log_every_n_steps=cfg.TRAIN.LOG_FREQ_TRAIN,
                          precision=16,
                          accumulate_grad_batches=cfg.TRAIN.ACCUMUALTE_GRAD_BATCHES,
                          devices=1,
@@ -132,6 +132,16 @@ def main():
     # load the best model and do eval
     if cfg.EVALUATE.DO_EVAL:
         trainer.test(lightning_module, test_dataloader, ckpt_path='best')
+
+    if cfg.EVALUATE.GENERATE_OUTPUT_SEGMENTATIONS:
+        lightning_module = lightning_module.to("cuda:0")
+        transforms_val = get_transforms(mode='val')
+        val_dataset = FundusOctDataset(cfg.DATA.BASEPATH, "val", transforms=transforms_val, task="segmentation", separate_bottom_bg=False)
+        val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS)
+    
+        output_path = Path(cfg.DATA.BASEPATH) / "Validation" / "Layer_Segmentations"
+        os.makedirs(str(output_path), exist_ok=True)
+        lightning_module.save_segmentations(val_dataloader, output_path)
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Fundus OCT Challenge")

@@ -33,8 +33,8 @@ _C.TRAIN.TRAIN_BATCH_SIZE = 2
 _C.TRAIN.ACCUMUALTE_GRAD_BATCHES = 1
 _C.TRAIN.LR = 0.0001
 _C.TRAIN.VAL_BATCH_SIZE = 2
-_C.TRAIN.LOG_FREQ = 25 # log every LOG_FREQ steps
-_C.TRAIN.LOG_FREQ_IMG = 25
+_C.TRAIN.LOG_FREQ_VAL = 25 # log every LOG_FREQ steps
+_C.TRAIN.LOG_FREQ_TRAIN = 25
 _C.TRAIN.SEPARATE_BOTTOM_BG = True
 _C.TRAIN.N_LOG_IMAGES = 1 # how many images from the batch to log, if higher than batch_size is set to batch_size
 # ... Add more default training configurations
@@ -45,6 +45,7 @@ _C.TRAIN.LR_REDUCER.FACTOR = 0.5
 # ... Add other configurations like optimizer, evaluator, etc.
 _C.EVALUATE = CN()
 _C.EVALUATE.DO_EVAL = True
+_C.EVALUATE.GENERATE_OUTPUT_SEGMENTATIONS = False
 def get_cfg_defaults():
     """Get a yacs CfgNode object with default values for my_project."""
     # Return a clone so that the defaults will not be altered

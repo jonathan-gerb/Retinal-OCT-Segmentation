@@ -280,9 +280,9 @@ class CombinedOCTDataset(Dataset):
                 return
 
         if self.task == 'reconstruction':
-            return img, img, self.task
+            return img, img, self.task, img_path
         if self.task == 'classification':
-            return img, label, self.task
+            return img, label, self.task, img_path
 
     def get_label_name(self, label_id):
         return list(self.label2classidx.keys())[label_id]

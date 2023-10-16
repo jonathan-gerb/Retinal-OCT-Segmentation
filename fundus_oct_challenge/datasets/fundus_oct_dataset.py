@@ -4,13 +4,13 @@ from torch.utils.data import Dataset
 from torchvision.io import read_image, ImageReadMode
 
 class FundusOctDataset(Dataset):
-    def __init__(self, root_dir='GOALS', mode='train', transforms=None, task="segmentation", seperate_bottom_bg=True):
+    def __init__(self, root_dir='GOALS', mode='train', transforms=None, task="segmentation", separate_bottom_bg=True):
         assert mode in ['train', 'val', 'test'], "Mode should be 'train', 'val', or 'test'"
         self.root_dir = root_dir
         self.mode = mode
         self.task = task
         self.transforms = transforms
-        self.seperate_bottom_bg = seperate_bottom_bg
+        self.separate_bottom_bg = separate_bottom_bg
         self.mapping_dict = {
             0: 1,
             80: 2,
@@ -58,12 +58,12 @@ class FundusOctDataset(Dataset):
         img = read_image(img_path, mode=ImageReadMode.GRAY).float() / 255.0
         mask = read_image(mask_path, mode=ImageReadMode.GRAY).squeeze().long()
 
-        mask = self.preprocess_png_mask(mask, seperate_bottom_bg=self.seperate_bottom_bg).unsqueeze(dim=0)
+        mask = self.preprocess_png_mask(mask, seperate_bottom_bg=self.separate_bottom_bg).unsqueeze(dim=0)
         assert torch.max(mask) < 20, f"found class with number higher than 20, something is probably wrong. {torch.max(mask)}"
 
         if self.transforms:
             img, mask = self.transforms(img, mask)
-        return img, mask, self.task
+        return img, mask, self.task, img_path
 
     def get_label_name(self, label_id):
         return list(self.label2id.keys())[label_id]
