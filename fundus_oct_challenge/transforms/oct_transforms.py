@@ -165,7 +165,7 @@ class Normalize(object):
 # -------------------------------- Function --------------------------------- #
 
 
-def get_transforms(mode="train"):
+def get_transforms(mode="train", no_sptransforms=False, no_transforms=False):
     """
     Function to get transformation for image instance.
 
@@ -195,6 +195,20 @@ def get_transforms(mode="train"):
         # ... Add any other image-only transformations for training mode
         Normalize(),
     ]
+
+    if no_transforms:
+        print(f"Disabling all {mode} transformations")
+        joint_transforms_train = []
+        image_transforms_train = [Normalize()]
+    
+    if no_sptransforms:
+        print(f"Disabling spatial {mode} transformations")
+        joint_transforms_train = [
+            RandomHorizontalFlipJoint(p=0.5),
+            # RandomRotationJoint(),
+            # VerticalShiftJoint(),
+            # RandomScaleJoint()
+        ]
 
     image_transforms_val = [
         # ... Add any other image-only transformations for validation/test mode

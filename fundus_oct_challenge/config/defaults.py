@@ -10,6 +10,8 @@ _C.DATA.BASEPATH = "./data"
 _C.DATA.DATASET = "GOALS"
 _C.DATA.NUM_WORKERS = 4
 _C.DATA.IMG_SIZE = (800, 1104)
+_C.DATA.TRAIN_DATASET_SUBSET_K = -1
+_C.DATA.OVERSAMPLE_TRAIN_DATASET_FACTOR = 1
 # ... Add more default data configurations as required
 
 # user config
@@ -22,10 +24,12 @@ _C.MODEL.PRETRAINED = True
 _C.MODEL.RESUME_PATH = ""
 _C.MODEL.NUM_CLASSES = 6 # for segmentation
 _C.MODEL.NUM_CLASSES_CLASSIFICATION = 4
+_C.MODEL.FREEZE_ENCODER = False
 # ... Add more default model configurations
 
 # Training configurations
 _C.TRAIN = CN()
+_C.TRAIN.RUN_NAME = ""
 _C.TRAIN.DO_TRAIN = True
 _C.TRAIN.MAX_EPOCH_LENGTH = -1 # for some datasets that are huge we would like to limit the size of the training dataset, -1 uses the entire dataset
 
@@ -36,6 +40,8 @@ _C.TRAIN.TRAIN_BATCH_SIZE = 2
 _C.TRAIN.ACCUMUALTE_GRAD_BATCHES = 1
 _C.TRAIN.LR = 0.0001
 _C.TRAIN.VAL_BATCH_SIZE = 2
+_C.TRAIN.NO_TRANSFORMS = False
+_C.TRAIN.NO_SPTRANSFORMS = False
 _C.TRAIN.LOG_FREQ_VAL = 25 # log every LOG_FREQ steps
 _C.TRAIN.LOG_FREQ_TRAIN = 25
 _C.TRAIN.SEPARATE_BOTTOM_BG = True

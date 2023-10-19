@@ -7,19 +7,17 @@ DATA:
   IMG_SIZE: [800, 1100]
 
 MODEL:
+  NUM_CLASSES: 6
   NAME: "unetr"
   PRETRAINED: true
-  RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/lightning_logs/7hlysqnt/checkpoints/epoch=24-step=425.ckpt"
-  NUM_CLASSES_CLASSIFICATION: 5
 
 TRAIN:
-  EPOCHS: 500
+  EPOCHS: 200
   TRAIN_BATCH_SIZE: 1
-  VAL_BATCH_SIZE : 1
-  TASK : "segmentation"
-  LOG_FREQ_TRAIN : 25
-  LOG_FREQ_VAL : 10
-  ACCUMUALTE_GRAD_BATCHES: 6
-
-EVAL:
-  GENERATE_OUTPUT_SEGMENTATIONS: true
+  VAL_BATCH_SIZE: 1
+  ACCUMUALTE_GRAD_BATCHES: 8
+  TASK: "segmentation"
+  LR: 0.0001
+  LOG_FREQ_VAL: 4
+  LOG_FREQ_TRAIN: 10
+  SEPARATE_BOTTOM_BG: false

@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from torchvision.models.segmentation import DeepLabV3_ResNet50_Weights
 from .unetr import UNETR
+from .unet import UNet
 from .basic_unet import BasicUNet
 from .attention_unet import MAnet
 
@@ -62,6 +63,11 @@ def get_model(cfg):
     if cfg.MODEL.NAME == 'deeplab':
         # Get a pretrained FCN with a ResNet-50 backbone
         model = DeepLabWrapper(pretrained=cfg.MODEL.PRETRAINED, num_classes=cfg.MODEL.NUM_CLASSES)
+
+        # if cfg.MODEL.FREEZE_ENCODER:
+        #     for param in model.model.encoder.parameters():
+        #         param.requires_grad = False
+
     elif cfg.MODEL.NAME == 'unetr':
         if cfg.MODEL.PRETRAINED:
             print("WARNING: no default pretrained weights available for model Unetr, " +
@@ -85,16 +91,46 @@ def get_model(cfg):
             in_channels=1,
             out_channels=cfg.MODEL.NUM_CLASSES
         )
+        # freeze gradients of encoder for finetuning of SSL pretrained model
+        if cfg.MODEL.FREEZE_ENCODER:
+            model.conv_0.requires_grad_(False)
+            model.down_1.requires_grad_(False)
+            model.down_2.requires_grad_(False)
+            model.down_3.requires_grad_(False)
+            model.down_4.requires_grad_(False)
+        
+    elif cfg.MODEL.NAME == "residual_unet":
+        model_image_size = (800, 1104)
+        model = UNet(
+            spatial_dims=2,
+            in_channels=1,
+            out_channels=cfg.MODEL.NUM_CLASSES,
+            channels=(32, 32, 64, 128, 256),
+            strides=(1, 2, 2, 2),
+        )
+        model = PaddingWrapper(model, model_size=model_image_size)
+
     elif cfg.MODEL.NAME == "attunet":
+        if cfg.MODEL.PRETRAINED:
+            print("loading pretrained imagenet weights")
+            encoder_weights_name = "imagenet"
+        else:
+            print("not load pretrained imagenet weights")
+            encoder_weights_name = None
+
         model_image_size = (800, 1120)
         model = MAnet(
             encoder_name = 'resnet34',
             in_channels = 1,
-            classes = 6
+            classes = cfg.MODEL.NUM_CLASSES,
+            encoder_weights=encoder_weights_name
         )
         model = PaddingWrapper(model, model_size=model_image_size)
+        for param in model.model.encoder.parameters():
+            param.requires_grad = False
         
-
+        for param in model.model.decoder.center.parameters():
+            param.requires_grad = False
     else:
         raise ValueError(f"Model {cfg.MODEL.NAME} not recognized!")
     

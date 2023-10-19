@@ -10,5 +10,4 @@ monai
 pytorch-lightning
 yacs
 openpyxl
-lightning-bolts
 segmentation_models_pytorch

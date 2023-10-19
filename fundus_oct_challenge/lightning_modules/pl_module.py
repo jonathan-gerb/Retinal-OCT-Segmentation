@@ -7,6 +7,7 @@ import torchvision.transforms.functional as TF
 import torchmetrics
 from pathlib import Path
 from PIL import Image
+import numpy as np
 import time
 import csv
 import wandb
@@ -60,6 +61,16 @@ class FundusOCTLightningModule(pl.LightningModule):
             "background_between": 4,
             "background_below": 5,
         }
+        # self.id2label = {v: k for k, v in self.label2id.items()}
+        # hardcoded all backgrounds to be the same, no longer seperating backgrounds
+        self.id2label = {
+            0: "background",
+            1: "retinal nerve fiber layer",
+            2: "ganglion cell-inner plexiform layer",
+            3: "choroidal layer",
+            4: "background",
+            5: "background",
+        }
 
     def forward(self, x):
         return self.model(x)
@@ -104,7 +115,7 @@ class FundusOCTLightningModule(pl.LightningModule):
 
             # Log images and segmentations every log_freq batches  
             if batch_idx % self.log_freq_train == 0:
-                self.log_images(inputs, targets, outputs)
+                self.log_images(inputs, targets, outputs, 'train')
             self.log('train_loss_segmentation', loss, on_step=True, on_epoch=True, prog_bar=True, batch_size=self.cfg.TRAIN.TRAIN_BATCH_SIZE)
         elif task == "classification":
             loss = F.cross_entropy(outputs, targets)
@@ -155,7 +166,7 @@ class FundusOCTLightningModule(pl.LightningModule):
             loss = F.cross_entropy(outputs, targets)
             # Log images and segmentations every log_freq batches
             if batch_idx % self.log_freq_val == 0:
-                self.log_images(inputs, targets, outputs)
+                self.log_images(inputs, targets, outputs, "val")
 
             start_time = time.time()
             self.log(f'{split}_loss_segmentation', loss, prog_bar=True, batch_size=self.cfg.TRAIN.VAL_BATCH_SIZE)
@@ -165,11 +176,15 @@ class FundusOCTLightningModule(pl.LightningModule):
             self.log(f'{split}_accuracy', accuracy, prog_bar=True, batch_size=self.cfg.TRAIN.VAL_BATCH_SIZE)
             accuracy_time = time.time()
 
-            dice = self.dice_metric(outputs, targets)
+            dice, dice_per_class = self.dice_metric(outputs, targets)
             self.log(f'{split}_dice', dice, prog_bar=True, batch_size=self.cfg.TRAIN.VAL_BATCH_SIZE)
             dice_time = time.time()
 
-            unweighted_dice = self.unweighted_dice_metric(outputs, targets)
+            for id, labelname in self.id2label.items():
+                class_dice = dice_per_class[int(id)]
+                self.log(f'{split}_dice_{labelname}', class_dice, prog_bar=True, batch_size=self.cfg.TRAIN.VAL_BATCH_SIZE)
+
+            unweighted_dice, _  = self.unweighted_dice_metric(outputs, targets)
             self.log(f'{split}_unweighted_dice', unweighted_dice, prog_bar=True, batch_size=self.cfg.TRAIN.VAL_BATCH_SIZE)
             dice_unweighted_time = time.time()
 
@@ -209,7 +224,8 @@ class FundusOCTLightningModule(pl.LightningModule):
     
 
     def configure_optimizers(self):
-        optimizer = optim.AdamW(self.model.parameters(), lr=self.cfg.TRAIN.LR)
+        # add parameters to model, but only those that require gradients,
+        optimizer = optim.AdamW(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.cfg.TRAIN.LR)
 
         # scheduler = LinearWarmupCosineAnnealingLR(optimizer, warmup_epochs=10, max_epochs=self.cfg.TRAIN.EPOCHS)
         if self.cfg.TRAIN.TASK == "reconstruction":
@@ -230,11 +246,11 @@ class FundusOCTLightningModule(pl.LightningModule):
         return {'optimizer': optimizer, 'lr_scheduler': scheduler}
 
     
-    def log_images(self, inputs, targets, outputs):
+    def log_images(self, inputs, targets, outputs, mode):
         self.logger.experiment.log({
-                "seg_input_val": [wandb.Image(img.float(), caption="Input Image") for img in inputs[:self.n_log_images]],
-                "seg_ground_truth_val": [wandb.Image(TF.to_pil_image(apply_colormap(img.int())), caption="Ground Truth") for img in targets[:self.n_log_images]],
-                "seg_predicted_val": [wandb.Image(TF.to_pil_image(apply_colormap(img.int())), caption="Predicted Segmentation") for img in outputs.argmax(1)[:self.n_log_images]]
+                f"seg_input_{mode}": [wandb.Image(img.float(), caption="Input Image") for img in inputs[:self.n_log_images]],
+                f"seg_ground_truth_{mode}": [wandb.Image(TF.to_pil_image(apply_colormap(img.int())), caption="Ground Truth") for img in targets[:self.n_log_images]],
+                f"seg_predicted_{mode}": [wandb.Image(TF.to_pil_image(apply_colormap(img.int())), caption="Predicted Segmentation") for img in outputs.argmax(1)[:self.n_log_images]]
             })
 
 
@@ -245,10 +261,12 @@ class FundusOCTLightningModule(pl.LightningModule):
 
     def save_segmentations(self, dataloader, output_path, channel_first=True):
         self.eval()
-        csv_filename = output_path.parent / "Classification_Results.csv"
+        csv_filename = output_path.parents[1] / "Classification_Results.csv"
         
         # set task (function because the model might be wrapped)
         self.set_task("segmentation")
+        dice_scores = []
+        filepaths = []
 
         with open(csv_filename, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
@@ -269,6 +287,10 @@ class FundusOCTLightningModule(pl.LightningModule):
                 # forward pass of model
                 with torch.no_grad():
                     outputs = self(inputs).cpu()
+
+                dice = self.dice_metric(outputs.to('cuda:0'), targets.to('cuda:0'))
+                dice_scores.append(float(dice))
+                filepaths.append(img_path)
 
                 # collapse dimensions
                 if channel_first:
@@ -291,6 +313,21 @@ class FundusOCTLightningModule(pl.LightningModule):
 
                 # Write to CSV
                 csvwriter.writerow([img_name, 0.0])
+
+        # Pair up the dice scores with their corresponding filepaths
+        pairs = list(zip(dice_scores, filepaths))
+
+        # Sort the pairs based on dice scores
+        sorted_pairs = sorted(pairs, key=lambda x: x[0])
+
+        # Get the filepaths corresponding to the k lowest dice scores
+        print(f"mean dice: {np.mean(dice_scores)}")
+        print(f"The files with scores are: ")
+        for i in range(len(sorted_pairs)):
+            score, fp = sorted_pairs[i][0], sorted_pairs[i][1]
+            print(f"file: '{str(Path(fp).name)}' dice: {score:.4f}")
+
+
 
 
 

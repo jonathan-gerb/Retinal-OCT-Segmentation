@@ -255,21 +255,21 @@ class CombinedOCTDataset(Dataset):
         label = self.all_labels[idx]
         if ".tif" in img_path:
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-            if img.ndim == 2:
-                img = img[np.newaxis, :, :]
         else:
             img = read_image(img_path, mode=ImageReadMode.GRAY).numpy()
 
+        if img is None or img.size == 0:
+            print('img was none or empty, sampling index 0 instead')
+            return self[0]
+        
         # replace white sides of rotated images, takes numpy input
         img = self.replace_white_sides(img)
 
         # Convert back to tensor and normalize
         img = torch.from_numpy(img).float() / 255.0
 
-        if img is None or img.nelement() == 0:
-            print('img was none or empty, sampling index 0 instead')
-            return self[0]
-
+        if img.ndim == 2:
+            img = img[np.newaxis, :, :]
         img = fn.resize(img, size=self.img_size, antialias=True)
         
         if self.transforms:

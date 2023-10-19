@@ -1,0 +1,18 @@
+# basic example config
+USERNAME: 'rockfor'
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
+  NUM_WORKERS: 5
+
+MODEL:
+  RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/output/models/attunet_nopretrain_best_dice93142.ckpt"
+  NUM_CLASSES: 6
+  NAME: "attunet"
+  PRETRAINED: true
+
+TRAIN:
+  DO_TRAIN: false
+
+EVALUATE:
+  DO_EVAL: false
+  GENERATE_OUTPUT_SEGMENTATIONS: true

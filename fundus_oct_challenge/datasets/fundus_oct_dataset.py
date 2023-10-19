@@ -38,11 +38,11 @@ class FundusOctDataset(Dataset):
             self.image_dir = os.path.join(root_dir, 'Train', 'Image')
             self.mask_dir = os.path.join(root_dir, 'Train', 'Layer_Masks')
         elif mode == 'val':
-            self.image_dir = os.path.join(root_dir, 'Validation', 'Image')
-            self.mask_dir = os.path.join(root_dir, 'Validation', 'Layer_Masks')
-        elif mode == 'test':
             self.image_dir = os.path.join(root_dir, 'Test', 'Image')
             self.mask_dir = os.path.join(root_dir, 'Test', 'Layer_Masks')
+        elif mode == 'test':
+            self.image_dir = os.path.join(root_dir, 'Validation', 'Image')
+            self.mask_dir = os.path.join(root_dir, 'Validation', 'Layer_Masks')
         else:
             raise NotImplementedError(f"No mode: {mode} implemented")
         

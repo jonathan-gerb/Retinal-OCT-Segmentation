@@ -92,4 +92,4 @@ class DiceCoefficient(nn.Module):
             dice_values[class_idx] = (2. * intersection) / (union + self.epsilon)
 
         # Weighted mean
-        return (dice_values * self.class_weights).sum() / self.class_weights.sum()
+        return (dice_values * self.class_weights).sum() / self.class_weights.sum(), dice_values

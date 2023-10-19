@@ -1,0 +1,29 @@
+# config that finetunes on goals using pretrained weights from the large combined dataset on the reconstruction task
+USERNAME: 'rockfor'
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
+  NUM_WORKERS: 5
+  DATASET: "goals"
+  IMG_SIZE: [800, 1100]
+
+MODEL:
+  NUM_CLASSES: 6
+  NAME: "deeplab"
+  PRETRAINED: true
+  RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/output/models/deeplab_nopretrain_best_dice.ckpt"
+
+TRAIN:
+  DO_TRAIN: false
+  EPOCHS: 200
+  TRAIN_BATCH_SIZE: 4
+  VAL_BATCH_SIZE: 4
+  ACCUMUALTE_GRAD_BATCHES: 2
+  TASK: "segmentation"
+  LR: 0.0001
+  LOG_FREQ_VAL: 4
+  LOG_FREQ_TRAIN: 4
+  SEPARATE_BOTTOM_BG: false
+
+EVALUATE:
+  DO_EVAL: false
+  GENERATE_OUTPUT_SEGMENTATIONS: true
