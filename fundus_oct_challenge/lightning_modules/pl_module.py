@@ -81,7 +81,7 @@ class FundusOCTLightningModule(pl.LightningModule):
         # all individual samples get a task from the dataloader
         # but its the same for all samples in a batch so just take the first
         assert len(set(tasks)) == 1, "not all the same tasks in batch! please check the dataset and sampler class"
-        assert torch.max(targets) < 20, f"found class with number higher than 20, something is probably wrong. {torch.max(mask)}"
+        assert torch.max(targets) < 20, f"found class with number higher than 20, something is probably wrong. {torch.max(targets)}"
 
         task = tasks[0]
         self.set_task(task)
