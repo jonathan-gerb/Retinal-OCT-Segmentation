@@ -1,5 +1,5 @@
-# Fundus-OCT-challenge
-Repository for the IChallenge Goals dataset: Fundus OCT layer segmentation
+# Retinal OCT Segmentation
+Repository for the [IChallenge Goals dataset](https://aistudio.baidu.com/competition/detail/230/0/introduction): Retinal OCT layer segmentation.
 
 # install guide
 make a new conda environment:
