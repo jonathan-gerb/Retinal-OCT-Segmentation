@@ -1,4 +1,4 @@
-# goals finetuning no pretrain
+# basic example config
 USERNAME: 'rockfor'
 DATA:
   BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
@@ -10,21 +10,26 @@ DATA:
 
 MODEL:
   NUM_CLASSES: 6
-  NAME: "unet"
+  NAME: "attunet"
   PRETRAINED: false
-  # RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/output/models/basicunet_combined_pretrain_recon0_04197.ckpt"
+  RESUME_PATH: "/mnt/mass_storage/master_ai/models_for_qualitative_analysis/attunet_SSL_alltransforms.ckpt"
   # FREEZE_ENCODER: true
 
 TRAIN:
+  DO_TRAIN: false
   EPOCHS: 200
-  TRAIN_BATCH_SIZE: 4
-  VAL_BATCH_SIZE: 4
-  ACCUMUALTE_GRAD_BATCHES: 2
-  TASK: "segmentation"
-  LR: 0.001 # higher learning rate because it's a convnet
+  TRAIN_BATCH_SIZE: 8
+  VAL_BATCH_SIZE: 8
+  ACCUMUALTE_GRAD_BATCHES: 1
+  TASK: 'segmentation'
+  LR: 0.0001
   LOG_FREQ_VAL: 4
-  LOG_FREQ_TRAIN: 5
+  LOG_FREQ_TRAIN: 10
   SEPARATE_BOTTOM_BG: false
   NO_TRANSFORMS: false
   NO_SPTRANSFORMS: false
-  RUN_NAME: "exp: transforms - all transform - basicunet"
+  RUN_NAME: "exp: SSL_vs_imagenet - alltransform - SSL"
+
+EVALUATE:
+  DO_EVAL: false
+  GENERATE_OUTPUT_SEGMENTATIONS: true

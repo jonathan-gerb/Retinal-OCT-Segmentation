@@ -12,10 +12,11 @@ MODEL:
   NUM_CLASSES: 6
   NAME: "unet"
   PRETRAINED: false
-  # RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/output/models/basicunet_combined_pretrain_recon0_04197.ckpt"
+  RESUME_PATH: "/mnt/mass_storage/master_ai/models_for_qualitative_analysis/basicunet_notransforms.ckpt"
   # FREEZE_ENCODER: true
 
 TRAIN:
+  DO_TRAIN: false
   EPOCHS: 200
   TRAIN_BATCH_SIZE: 4
   VAL_BATCH_SIZE: 4
@@ -26,5 +27,9 @@ TRAIN:
   LOG_FREQ_TRAIN: 5
   SEPARATE_BOTTOM_BG: false
   NO_TRANSFORMS: false
-  NO_SPTRANSFORMS: false
-  RUN_NAME: "exp: transforms - all transform - basicunet"
+  NO_SPTRANSFORMS: true
+  RUN_NAME: "exp: transforms - no transform - basicunet"
+
+EVALUATE:
+  DO_EVAL: false
+  GENERATE_OUTPUT_SEGMENTATIONS: true

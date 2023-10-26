@@ -261,7 +261,7 @@ class FundusOCTLightningModule(pl.LightningModule):
 
     def save_segmentations(self, dataloader, output_path, channel_first=True):
         self.eval()
-        csv_filename = output_path.parents[1] / "Classification_Results.csv"
+        csv_filename = output_path.parents[1] / "segmentation_scores.csv"
         
         # set task (function because the model might be wrapped)
         self.set_task("segmentation")
@@ -270,16 +270,17 @@ class FundusOCTLightningModule(pl.LightningModule):
 
         with open(csv_filename, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
+            
+            # Write header to CSV
+            csvwriter.writerow(["Image Name", "Dice Score"])
 
             for batch in dataloader:
                 inputs, targets, _, img_paths = batch
-
                 inputs = inputs.to(self.device)
 
                 img_path = img_paths[0]
                 img_name = Path(img_path).name
                 segmentation_output_path = output_path / img_name
-
 
                 # collapse target dimensions
                 targets = targets.squeeze(dim=1)
@@ -288,7 +289,7 @@ class FundusOCTLightningModule(pl.LightningModule):
                 with torch.no_grad():
                     outputs = self(inputs).cpu()
 
-                dice = self.dice_metric(outputs.to('cuda:0'), targets.to('cuda:0'))
+                dice, _ = self.dice_metric(outputs.to('cuda:0'), targets.to('cuda:0'))
                 dice_scores.append(float(dice))
                 filepaths.append(img_path)
 
@@ -299,20 +300,26 @@ class FundusOCTLightningModule(pl.LightningModule):
                     outputs = outputs.argmax(dim=-1)
 
                 # convert label values to rgb values
-                outputs = self.map_values(outputs)
+                # outputs = self.map_values(outputs)
 
                 # Convert the tensor to a numpy array and then to a PIL Image
-                outputs_np = outputs.cpu().numpy().squeeze().astype('uint8')
-                
-                # Ensure it's 2D before converting to an image
-                if len(outputs_np.shape) > 2:
-                    raise ValueError("Unexpected shape for output array:", outputs_np.shape)
+                outputs = outputs.cpu().squeeze()
+                outputs_np = apply_colormap(outputs.int()).numpy().astype(np.uint8)
 
-                img = Image.fromarray(outputs_np)
+                # Ensure it's 2D before converting to an image
+                if len(outputs_np.shape) > 3:
+                    raise ValueError("Unexpected shape for output array:", outputs_np.shape)
+                
+                img = Image.fromarray(outputs_np.transpose(1,2,0))
                 img.save(str(segmentation_output_path))
 
+                # targets_np = apply_colormap(targets.squeeze().int()).numpy().astype(np.uint8)
+                # img = Image.fromarray(targets_np.transpose(1,2,0))
+                # img.save(str(segmentation_output_path))
+
+
                 # Write to CSV
-                csvwriter.writerow([img_name, 0.0])
+                csvwriter.writerow([img_name, float(dice)])
 
         # Pair up the dice scores with their corresponding filepaths
         pairs = list(zip(dice_scores, filepaths))

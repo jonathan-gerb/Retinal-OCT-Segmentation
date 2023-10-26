@@ -324,15 +324,15 @@ def main():
     if cfg.EVALUATE.GENERATE_OUTPUT_SEGMENTATIONS:
         lightning_module = lightning_module.to("cuda:0")
         transforms_val = get_transforms(mode="val")
-        val_dataset = FundusOctDataset(
+        test_dataset = FundusOctDataset(
             cfg.DATA.BASEPATH,
-            "val",
+            "test",
             transforms=transforms_val,
             task="segmentation",
             separate_bottom_bg=False,
         )
-        val_dataloader = DataLoader(
-            val_dataset, batch_size=1, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS
+        test_dataloader = DataLoader(
+            test_dataset, batch_size=1, shuffle=False, num_workers=cfg.DATA.NUM_WORKERS
         )
 
         output_path = (
@@ -342,7 +342,7 @@ def main():
             / "Layer_Segmentations"
         )
         os.makedirs(str(output_path), exist_ok=True)
-        lightning_module.save_segmentations(val_dataloader, output_path)
+        lightning_module.save_segmentations(test_dataloader, output_path)
 
 
 def parse_arguments():

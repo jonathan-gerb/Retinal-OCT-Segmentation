@@ -9,7 +9,11 @@ folders=(
     "experiment_subset25_transforms"
     "experiment_subset5_transforms"
     "experiment_transforms"
+    "experiment_SSL_imagenet_subset5"
+    "experiment_SSL_imagenet_subset25"
 )
+
+fundus-oct --cfg run/configs/experiment_transforms/goals_finetuning_basicunet_alltransform.yml
 
 # Loop through each folder
 for folder in "${folders[@]}"; do
