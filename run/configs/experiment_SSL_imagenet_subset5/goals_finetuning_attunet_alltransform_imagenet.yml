@@ -1,0 +1,30 @@
+# basic example config
+USERNAME: 'rockfor'
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
+  NUM_WORKERS: 5
+  DATASET: "goals"
+  IMG_SIZE: [800, 1100]
+  TRAIN_DATASET_SUBSET_K: 5
+  OVERSAMPLE_TRAIN_DATASET_FACTOR: 20
+
+MODEL:
+  NUM_CLASSES: 6
+  NAME: "attunet"
+  PRETRAINED: true
+  # RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/output/models/attunet_combined_pretrained_recon0_05012.ckpt"
+  # FREEZE_ENCODER: true
+
+TRAIN:
+  EPOCHS: 200
+  TRAIN_BATCH_SIZE: 8
+  VAL_BATCH_SIZE: 8
+  ACCUMUALTE_GRAD_BATCHES: 1
+  TASK: 'segmentation'
+  LR: 0.0001
+  LOG_FREQ_VAL: 4
+  LOG_FREQ_TRAIN: 10
+  SEPARATE_BOTTOM_BG: false
+  NO_TRANSFORMS: false
+  NO_SPTRANSFORMS: false
+  RUN_NAME: "exp: SSL/imagenet subset - alltransform - imagenet - k=5"

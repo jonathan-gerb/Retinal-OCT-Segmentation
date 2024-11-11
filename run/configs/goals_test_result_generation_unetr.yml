@@ -1,0 +1,20 @@
+# config that finetunes on goals using pretrained weights from the large combined dataset on the reconstruction task
+USERNAME: 'rockfor'
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
+  NUM_WORKERS: 5
+  DATASET: "goals"
+  IMG_SIZE: [800, 1100]
+
+MODEL:
+  NAME: "unetr"
+  PRETRAINED: true
+  RESUME_PATH: "/home/parting/master_AI/medical_ai/Fundus-OCT-challenge/oct_fundus/t4zecrzb/checkpoints/epoch=58-step=1003.ckpt"
+  NUM_CLASSES_CLASSIFICATION: 5
+
+TRAIN:
+  DO_TRAIN: false
+
+EVALUATE:
+  DO_EVAL : false
+  GENERATE_OUTPUT_SEGMENTATIONS: true

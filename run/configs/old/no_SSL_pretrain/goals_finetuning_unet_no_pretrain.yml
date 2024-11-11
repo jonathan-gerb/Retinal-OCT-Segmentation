@@ -1,0 +1,23 @@
+# goals finetuning no pretrain
+USERNAME: 'rockfor'
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection/GOALS"
+  NUM_WORKERS: 5
+  DATASET: "goals"
+  IMG_SIZE: [800, 1100]
+
+MODEL:
+  NUM_CLASSES: 6
+  NAME: "residual_unet"
+  PRETRAINED: true
+
+TRAIN:
+  EPOCHS: 200
+  TRAIN_BATCH_SIZE: 8
+  VAL_BATCH_SIZE: 8
+  ACCUMUALTE_GRAD_BATCHES: 1
+  TASK: "segmentation"
+  LR: 0.001 # higher learning rate because it's a convnet
+  LOG_FREQ_VAL: 4
+  LOG_FREQ_TRAIN: 10
+  SEPARATE_BOTTOM_BG: false

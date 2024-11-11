@@ -1,0 +1,24 @@
+# basic example config
+USERNAME: 'rockfor'
+DATA:
+  BASEPATH: "/mnt/mass_storage/master_ai/retinal_oct_dataset_collection"
+  NUM_WORKERS: 5
+  DATASET: "combined"
+  IMG_SIZE: [800, 1100]
+
+MODEL:
+  NUM_CLASSES: 6
+  NAME: "attunet"
+  PRETRAINED: true
+
+TRAIN:
+  EPOCHS: 200
+  TRAIN_BATCH_SIZE: 8
+  VAL_BATCH_SIZE: 8
+  ACCUMUALTE_GRAD_BATCHES: 1
+  TASK: 'reconstruction'
+  LR: 0.0001
+  LOG_FREQ_VAL: 50
+  LOG_FREQ_TRAIN: 50
+  MAX_EPOCH_LENGTH : 2000
+  SEPARATE_BOTTOM_BG: false
